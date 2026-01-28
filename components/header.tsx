@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Globe, Menu, X } from "lucide-react"
@@ -15,7 +16,32 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
+  const headerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
+  
+  useEffect(() => {
+    const currentHeaderRef = headerRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        threshold: 0.1,
+      }
+    );
+
+    if (currentHeaderRef) {
+      observer.observe(currentHeaderRef);
+    }
+
+    return () => {
+      if (currentHeaderRef) {
+        observer.unobserve(currentHeaderRef);
+      }
+    };
+  }, []);
   
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/"
@@ -23,8 +49,19 @@ export function Header() {
   }
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-50 px-4 py-4 md:px-8 lg:px-12">
-      <div className="mx-auto flex max-w-7xl items-center justify-between">
+    <motion.header 
+      ref={headerRef}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : -20 }}
+      transition={{ duration: 0.6 }}
+      className="absolute top-0 left-0 right-0 z-50 px-4 py-4 md:px-8 lg:px-12"
+    >
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="mx-auto flex max-w-7xl items-center justify-between"
+      >
         <Link href="/" className="text-xl font-semibold text-foreground">
           EverGreen
         </Link>
@@ -72,7 +109,7 @@ export function Header() {
         >
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
-      </div>
+      </motion.div>
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
@@ -107,6 +144,6 @@ export function Header() {
           </nav>
         </div>
       )}
-    </header>
+    </motion.header>
   )
 }

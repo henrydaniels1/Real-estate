@@ -1,6 +1,8 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react"
 
 const footerLinks = {
@@ -37,10 +39,47 @@ const socialLinks = [
 ]
 
 export function Footer() {
+  const [isVisible, setIsVisible] = useState(false)
+  const footerRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const currentFooterRef = footerRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (currentFooterRef) {
+      observer.observe(currentFooterRef);
+    }
+
+    return () => {
+      if (currentFooterRef) {
+        observer.unobserve(currentFooterRef);
+      }
+    };
+  }, []);
+
   return (
-    <footer className="bg-muted/50 pt-16 pb-8">
+    <motion.footer 
+      ref={footerRef}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+      transition={{ duration: 0.8 }}
+      className="bg-muted/50 pt-16 pb-8"
+    >
       <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
-        <div className="mb-12 grid gap-8 md:grid-cols-2 lg:grid-cols-5">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isVisible ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mb-12 grid gap-8 md:grid-cols-2 lg:grid-cols-5"
+        >
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link href="/" className="text-xl font-semibold text-foreground">
@@ -64,7 +103,8 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div>
+          <div className="grid grid-cols-2 lg:col-span-4 grid-cols-2 gap-8 md:grid-cols-4">
+        <div>
             <h4 className="mb-4 font-semibold text-foreground">Company</h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
@@ -127,10 +167,17 @@ export function Footer() {
               ))}
             </ul>
           </div>
-        </div>
+          </div>
 
-        {/* Bottom */}
-        <div className="border-t border-border pt-8">
+          
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="border-t border-border pt-8"
+        >
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} EverGreen. All rights reserved.
@@ -139,8 +186,8 @@ export function Footer() {
               Made with care in Indonesia
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </footer>
+    </motion.footer>
   )
 }

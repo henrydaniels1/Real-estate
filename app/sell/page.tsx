@@ -22,6 +22,7 @@ export default async function SellPage() {
     .single()
 
   const userData = {
+    id: user.id,
     name: profile?.full_name || user.email?.split("@")[0] || "User",
     email: user.email || "",
     avatarUrl: profile?.avatar_url,

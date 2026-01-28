@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { ListingsHeader } from "@/components/listings-header"
 import { PropertyFilters } from "@/components/property-filters"
 import { PropertyCard } from "@/components/property-card"
@@ -26,12 +27,15 @@ interface Property {
   amenities: string[]
   rating: number
   status?: string
+  kitchens?: number
+  garages?: number
 }
 
 interface PropertiesClientProps {
   initialProperties: Property[]
   initialFavorites: string[]
   user: {
+    id?: string
     name: string
     email: string
     avatarUrl?: string
@@ -42,22 +46,20 @@ interface PropertiesClientProps {
 }
 
 const defaultFilters = {
-  locations: [],
+  locations: [] as string[],
   priceRange: "",
   customPriceMin: 0,
   customPriceMax: 50000,
   landAreaMin: "",
   landAreaMax: "",
-  propertyTypes: [],
-  amenities: [],
+  propertyTypes: [] as string[],
+  amenities: [] as string[],
 }
 
 export function PropertiesClient({
   initialProperties,
   initialFavorites,
   user,
-  pageTitle = "Properties for Sale",
-  pageDescription,
   isRentPage = false,
 }: PropertiesClientProps) {
   const [filters, setFilters] = useState(defaultFilters)
@@ -70,79 +72,76 @@ export function PropertiesClient({
   const supabase = createClient()
 
   const filteredProperties = useMemo(() => {
+    const { locations, priceRange, customPriceMin, customPriceMax, landAreaMin, landAreaMax, propertyTypes, amenities } = filters
+    
+    if (!locations.length && !priceRange && !propertyTypes.length && !amenities.length && !landAreaMin && !landAreaMax) {
+      return initialProperties
+    }
+
+    const minArea = landAreaMin ? Number(landAreaMin) : null
+    const maxArea = landAreaMax ? Number(landAreaMax) : null
+    const hasValidMinArea = minArea && !isNaN(minArea)
+    const hasValidMaxArea = maxArea && !isNaN(maxArea)
+
     return initialProperties.filter((property) => {
       // Location filter
-      if (
-        filters.locations.length > 0 &&
-        !filters.locations.some((loc) =>
-          property.location.toLowerCase().includes(loc.toLowerCase())
-        )
-      ) {
-        return false
+      if (locations.length > 0) {
+        const propertyLocation = property.location.toLowerCase()
+        if (!locations.some((loc) => propertyLocation.includes(loc.toLowerCase()))) {
+          return false
+        }
       }
 
       // Price filter
-      if (filters.priceRange) {
-        if (filters.priceRange === "under-1000" && property.price >= 1000) {
-          return false
-        }
-        if (
-          filters.priceRange === "1000-15000" &&
-          (property.price < 1000 || property.price > 15000)
-        ) {
-          return false
-        }
-        if (filters.priceRange === "over-15000" && property.price <= 15000) {
-          return false
-        }
-        if (
-          filters.priceRange === "custom" &&
-          (property.price < filters.customPriceMin ||
-            property.price > filters.customPriceMax)
-        ) {
-          return false
+      if (priceRange) {
+        const price = property.price
+        switch (priceRange) {
+          case "under-1000":
+            if (price >= 1000) return false
+            break
+          case "1000-15000":
+            if (price < 1000 || price > 15000) return false
+            break
+          case "over-15000":
+            if (price <= 15000) return false
+            break
+          case "custom":
+            if (price < customPriceMin || price > customPriceMax) return false
+            break
         }
       }
 
       // Property type filter
-      if (
-        filters.propertyTypes.length > 0 &&
-        !filters.propertyTypes.some(
-          (type) =>
-            property.property_type.toLowerCase() === type.toLowerCase() ||
-            (type === "Single Family Home" &&
-              property.property_type.toLowerCase() === "house")
-        )
-      ) {
-        return false
+      if (propertyTypes.length > 0) {
+        const propertyType = property.property_type.toLowerCase()
+        if (!propertyTypes.some((type) => 
+          propertyType === type.toLowerCase() ||
+          (type === "Single Family Home" && propertyType === "house")
+        )) {
+          return false
+        }
       }
 
       // Amenities filter
-      if (
-        filters.amenities.length > 0 &&
-        !filters.amenities.every((amenity) =>
-          property.amenities?.some(
-            (a) => a.toLowerCase() === amenity.toLowerCase()
-          )
-        )
-      ) {
-        return false
+      if (amenities.length > 0) {
+        const propertyAmenities = property.amenities || []
+        if (!amenities.every((amenity) =>
+          propertyAmenities.some((a) => a.toLowerCase() === amenity.toLowerCase())
+        )) {
+          return false
+        }
       }
 
       // Land area filter
-      if (filters.landAreaMin && property.area < parseInt(filters.landAreaMin)) {
-        return false
-      }
-      if (filters.landAreaMax && property.area > parseInt(filters.landAreaMax)) {
-        return false
-      }
+      if (hasValidMinArea && property.area < minArea) return false
+      if (hasValidMaxArea && property.area > maxArea) return false
 
       return true
     })
   }, [initialProperties, filters])
 
   const handleFavoriteToggle = async (propertyId: string) => {
-    if (!user) {
+    if (!user || !user.id) {
       window.location.href = "/auth/login"
       return
     }
@@ -151,13 +150,27 @@ export function PropertiesClient({
 
     if (isFavorite) {
       setFavorites((prev) => prev.filter((id) => id !== propertyId))
-      await supabase
+      const { error } = await supabase
         .from("favorites")
         .delete()
-        .match({ property_id: propertyId })
+        .eq("property_id", propertyId)
+        .eq("user_id", user.id)
+      
+      if (error) {
+        console.log("[v0] Error removing favorite:", error)
+        setFavorites((prev) => [...prev, propertyId])
+      }
     } else {
       setFavorites((prev) => [...prev, propertyId])
-      await supabase.from("favorites").insert({ property_id: propertyId })
+      const { error } = await supabase.from("favorites").insert({ 
+        property_id: propertyId,
+        user_id: user.id 
+      })
+      
+      if (error) {
+        console.log("[v0] Error adding favorite:", error)
+        setFavorites((prev) => prev.filter((id) => id !== propertyId))
+      }
     }
   }
 
@@ -166,57 +179,111 @@ export function PropertiesClient({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <ListingsHeader user={user} activeTab={isRentPage ? "rent" : "buy"} />
 
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="flex gap-6">
-          {/* Mobile Filter Toggle */}
-          <Button
-            variant="outline"
-            className="fixed bottom-4 left-4 z-50 lg:hidden bg-transparent"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            {showFilters ? (
-              <X className="mr-2 h-4 w-4" />
-            ) : (
-              <Menu className="mr-2 h-4 w-4" />
-            )}
-            Filters
-          </Button>
-
+      <div className="mx-auto max-w-7xl px-4 py-6 ">
+        <div className="">
+          
           {/* Filters Sidebar */}
-          <div
+          <motion.div
             className={`fixed inset-y-0 left-0 z-40 w-72 transform bg-card p-4 shadow-lg transition-transform lg:relative lg:z-0 lg:w-64 lg:transform-none lg:bg-transparent lg:p-0 lg:shadow-none ${
               showFilters ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             }`}
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <PropertyFilters
               filters={filters}
               onFiltersChange={setFilters}
               onClearAll={() => setFilters(defaultFilters)}
             />
-          </div>
+          </motion.div>
 
           {/* Overlay for mobile */}
-          {showFilters && (
-            <div
-              className="fixed inset-0 z-30 bg-foreground/20 backdrop-blur-sm lg:hidden"
-              onClick={() => setShowFilters(false)}
-            />
-          )}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                className="fixed inset-0 z-30 bg-foreground/20 backdrop-blur-sm lg:hidden"
+                onClick={() => setShowFilters(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              />
+            )}
+          </AnimatePresence>
 
           {/* Properties Grid */}
-          <div className="flex-1">
-            <div className="mb-4 text-sm text-muted-foreground">
+          <div className="flex-1 ">
+            {/* Mobile Filter Toggle */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+              className="lg:hidden mb-4"
+            >
+              <Button
+                variant="outline"
+                className="bg-card shadow-sm border-border"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                {showFilters ? (
+                  <X className="mr-2 h-4 w-4" />
+                ) : (
+                  <Menu className="mr-2 h-4 w-4" />
+                )}
+                Filters
+              </Button>
+            </motion.div>
+            
+            <motion.div 
+              className="mb-4 text-sm text-muted-foreground"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               {filteredProperties.length} properties found
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
-              {filteredProperties.map((property) => (
-                <div
+            </motion.div>
+            <motion.div 
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {filteredProperties.map((property, index) => (
+                <motion.div
                   key={property.id}
                   onClick={() => handlePropertySelect(property)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handlePropertySelect(property)
+                    }
+                  }}
                   className="cursor-pointer"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View details for ${property.title} in ${property.location}`}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    duration: 0.5,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <PropertyCard
                     id={property.id}
@@ -230,49 +297,62 @@ export function PropertiesClient({
                     isFavorite={favorites.includes(property.id)}
                     onFavoriteToggle={handleFavoriteToggle}
                   />
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
             {filteredProperties.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
+              <motion.div 
+                className="flex flex-col items-center justify-center py-12 text-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
                 <p className="text-lg font-medium text-foreground">
                   No properties found
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Try adjusting your filters to see more results.
                 </p>
-              </div>
+              </motion.div>
             )}
           </div>
 
           {/* Property Detail Panel */}
-          {selectedProperty && (
-            <div className="hidden w-96 lg:block">
-              <PropertyDetailPanel
-                property={{
-                  id: selectedProperty.id,
-                  title: selectedProperty.title,
-                  location: selectedProperty.location,
-                  price: selectedProperty.price,
-                  description:
-                    selectedProperty.description ||
-                    "Welcome to this beautiful property. Experience a peaceful escape at this modern retreat set on a quiet hillside with stunning views of valleys and starry nights.",
-                  bedrooms: selectedProperty.bedrooms,
-                  bathrooms: selectedProperty.bathrooms,
-                  kitchens: 2,
-                  area: selectedProperty.area,
-                  garages: 1,
-                  imageUrl: selectedProperty.image_url,
-                  images: selectedProperty.images || [],
-                }}
-                onClose={() => setSelectedProperty(null)}
-              />
-            </div>
-          )}
+          <AnimatePresence>
+            {selectedProperty && (
+              <motion.div 
+                className="hidden w-96 lg:block"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 100 }}
+                transition={{ duration: 0.3 }}
+              >
+                <PropertyDetailPanel
+                  property={{
+                    id: selectedProperty.id,
+                    title: selectedProperty.title,
+                    location: selectedProperty.location,
+                    price: selectedProperty.price,
+                    description:
+                      selectedProperty.description ||
+                      "Welcome to this beautiful property. Experience a peaceful escape at this modern retreat set on a quiet hillside with stunning views of valleys and starry nights.",
+                    bedrooms: selectedProperty.bedrooms,
+                    bathrooms: selectedProperty.bathrooms,
+                    kitchens: selectedProperty.kitchens || 1,
+                    area: selectedProperty.area,
+                    garages: selectedProperty.garages || 1,
+                    imageUrl: selectedProperty.image_url,
+                    images: selectedProperty.images || [],
+                  }}
+                  onClose={() => setSelectedProperty(null)}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
       <Footer />
-    </div>
+    </motion.div>
   )
 }

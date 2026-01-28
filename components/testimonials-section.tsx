@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
 import { Star } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
@@ -31,25 +33,80 @@ const testimonials = [
 ]
 
 export function TestimonialsSection() {
-  return (
-    <section className="bg-background py-20 md:py-28">
-      <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
-        <div className="mb-16 text-center">
-          <span className="mb-4 inline-block text-sm font-medium uppercase tracking-wider text-primary">
-            Testimonials
-          </span>
-          <h2 className="mb-4 text-3xl font-semibold text-foreground md:text-4xl text-balance">
-            What our clients say
-          </h2>
-          <p className="mx-auto max-w-2xl text-muted-foreground">
-            Join thousands of satisfied customers who found their perfect property with us
-          </p>
-        </div>
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
 
-        <div className="grid gap-8 md:grid-cols-3">
+  useEffect(() => {
+    const currentSectionRef = sectionRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (currentSectionRef) {
+      observer.observe(currentSectionRef);
+    }
+
+    return () => {
+      if (currentSectionRef) {
+        observer.unobserve(currentSectionRef);
+      }
+    };
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="bg-background py-20 md:py-28">
+      <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+          transition={{ duration: 0.8 }}
+          className="mb-16 text-center"
+        >
+          <motion.span 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4 inline-block text-sm font-medium uppercase tracking-wider text-primary"
+          >
+            Testimonials
+          </motion.span>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-4 text-3xl font-semibold text-foreground md:text-4xl text-balance"
+          >
+            What our clients say
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="mx-auto max-w-2xl text-muted-foreground"
+          >
+            Join thousands of satisfied customers who found their perfect property with us
+          </motion.p>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isVisible ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="grid gap-8 md:grid-cols-3"
+        >
           {testimonials.map((testimonial, index) => (
-            <div
+            <motion.div
               key={index}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+              transition={{ duration: 0.6, delay: 0.6 + index * 0.2 }}
+              whileHover={{ y: -5 }}
               className="rounded-2xl border border-border bg-card p-6 transition-all hover:shadow-lg"
             >
               <div className="mb-4 flex gap-1">
@@ -78,9 +135,9 @@ export function TestimonialsSection() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

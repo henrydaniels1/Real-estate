@@ -1,7 +1,9 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { Heart, MapPin, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -32,6 +34,31 @@ export function PropertyCard({
   isFavorite = false,
   onFavoriteToggle,
 }: PropertyCardProps) {
+  const [isVisible, setIsVisible] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const currentCardRef = cardRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (currentCardRef) {
+      observer.observe(currentCardRef);
+    }
+
+    return () => {
+      if (currentCardRef) {
+        observer.unobserve(currentCardRef);
+      }
+    };
+  }, []);
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -55,7 +82,14 @@ export function PropertyCard({
   }
 
   return (
-    <Card className="group overflow-hidden border-border bg-card transition-shadow hover:shadow-lg">
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+      transition={{ duration: 0.6 }}
+      whileHover={{ y: -5 }}
+    >
+      <Card className="group overflow-hidden border-border bg-card transition-shadow hover:shadow-lg">
       <div className="relative aspect-[4/3] overflow-hidden">
         <Link href={`/properties/${id}`}>
           <Image
@@ -113,6 +147,7 @@ export function PropertyCard({
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </motion.div>
   )
 }

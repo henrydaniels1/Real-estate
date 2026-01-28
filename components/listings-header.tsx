@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Home, Search, ChevronDown, LogOut, User, Settings } from "lucide-react"
+import { Home, Search, ChevronDown, LogOut, User, Settings, Menu, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
@@ -26,6 +27,7 @@ const navLinks = [
 
 interface ListingsHeaderProps {
   user?: {
+    id?: string
     name: string
     email: string
     avatarUrl?: string
@@ -36,6 +38,7 @@ interface ListingsHeaderProps {
 export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps) {
   const router = useRouter()
   const supabase = createClient()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -56,8 +59,8 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
           </span>
         </Link>
 
-        {/* Navigation */}
-        <nav className="hidden items-center gap-1 md:flex">
+        {/* Desktop Navigation */}
+        <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.key}
@@ -73,9 +76,9 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
           ))}
         </nav>
 
-        {/* Search and User */}
+        {/* Desktop Search and User */}
         <div className="flex items-center gap-4">
-          <div className="relative hidden md:block">
+          <div className="relative hidden lg:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search Anything..."
@@ -83,14 +86,124 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
             />
           </div>
 
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-2"
+          {/* Desktop User Menu */}
+          <div className="hidden lg:flex">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-2"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatarUrl || "/placeholder.svg"} alt={user.name} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-foreground">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login">
+                  <Button variant="ghost" className="rounded-full">
+                    Log In
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button className="rounded-full bg-primary text-primary-foreground">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="lg:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="border-t border-border bg-card lg:hidden">
+          <div className="px-4 py-4 space-y-4">
+            {/* Mobile Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search Anything..."
+                className="w-full rounded-full border-border bg-muted/50 pl-10"
+              />
+            </div>
+
+            {/* Mobile Navigation Links */}
+            <nav className="space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.key}
+                  href={link.href}
+                  className={`block px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+                    link.key === activeTab
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Avatar className="h-8 w-8">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile User Section */}
+            {user ? (
+              <div className="border-t border-border pt-4 space-y-2">
+                <div className="flex items-center gap-3 px-4 py-2">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={user.avatarUrl || "/placeholder.svg"} alt={user.name} />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {user.name
@@ -99,54 +212,57 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="hidden text-left md:block">
+                  <div>
                     <p className="text-sm font-medium text-foreground">
                       {user.name}
                     </p>
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 text-destructive"
+                </div>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut()
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link href="/auth/login">
-                <Button variant="ghost" className="rounded-full">
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/auth/sign-up">
-                <Button className="rounded-full bg-primary text-primary-foreground">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-          )}
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-border pt-4 space-y-2">
+                <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    Log In
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full bg-primary text-primary-foreground">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   )
 }

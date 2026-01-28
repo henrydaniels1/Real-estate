@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { PropertyCard } from "@/components/property-card"
 import { createClient } from "@/lib/supabase/client"
 
@@ -28,33 +29,68 @@ export function FavoritesClient({
   const supabase = createClient()
 
   const handleFavoriteToggle = async (propertyId: string) => {
-    // Remove from UI immediately
+    // Store current state for rollback
+    const previousProperties = properties
+    
+    // Remove from UI immediately (optimistic update)
     setProperties((prev) => prev.filter((p) => p.id !== propertyId))
 
     // Remove from database
-    await supabase
+    const { error } = await supabase
       .from("favorites")
       .delete()
-      .match({ property_id: propertyId, user_id: userId })
+      .eq("property_id", propertyId)
+      .eq("user_id", userId)
+    
+    if (error) {
+      console.log("[v0] Error removing favorite:", error)
+      // Rollback on error
+      setProperties(previousProperties)
+    }
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {properties.map((property) => (
-        <PropertyCard
-          key={property.id}
-          id={property.id}
-          title={property.title}
-          location={property.location}
-          price={property.price}
-          rating={property.rating || 4.5}
-          imageUrl={property.image_url}
-          propertyType={property.property_type}
-          status={property.status}
-          isFavorite={true}
-          onFavoriteToggle={handleFavoriteToggle}
-        />
-      ))}
-    </div>
+    <motion.div 
+      className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <AnimatePresence>
+        {properties.map((property, index) => (
+          <motion.div
+            key={property.id}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            transition={{ 
+              delay: index * 0.1,
+              duration: 0.5,
+              type: "spring",
+              stiffness: 100
+            }}
+            whileHover={{ 
+              scale: 1.03,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.97 }}
+            layout
+          >
+            <PropertyCard
+              id={property.id}
+              title={property.title}
+              location={property.location}
+              price={property.price}
+              rating={property.rating || 4.5}
+              imageUrl={property.image_url}
+              propertyType={property.property_type}
+              status={property.status}
+              isFavorite={true}
+              onFavoriteToggle={handleFavoriteToggle}
+            />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </motion.div>
   )
 }

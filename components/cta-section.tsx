@@ -1,21 +1,69 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function CTASection() {
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const currentSectionRef = sectionRef.current;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (currentSectionRef) {
+      observer.observe(currentSectionRef);
+    }
+
+    return () => {
+      if (currentSectionRef) {
+        observer.unobserve(currentSectionRef);
+      }
+    };
+  }, []);
+
   return (
-    <section className="bg-foreground py-20 md:py-28">
+    <section ref={sectionRef} className="bg-foreground py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
-        <div className="flex flex-col items-center text-center">
-          <h2 className="mb-4 text-3xl font-semibold text-background md:text-4xl lg:text-5xl text-balance">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+          transition={{ duration: 0.8 }}
+          className="flex flex-col items-center text-center"
+        >
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mb-4 text-3xl font-semibold text-background md:text-4xl lg:text-5xl text-balance"
+          >
             Ready to find your dream property?
-          </h2>
-          <p className="mb-8 max-w-2xl text-lg text-background/70">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mb-8 max-w-2xl text-lg text-background/70"
+          >
             Whether you&apos;re buying, selling, or investing, we&apos;re here to help you every step of the way.
-          </p>
-          <div className="flex flex-col gap-4 sm:flex-row">
+          </motion.p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex flex-col gap-4 sm:flex-row"
+          >
             <Link href="/properties">
               <Button
                 size="lg"
@@ -34,8 +82,8 @@ export function CTASection() {
                 List Your Property
               </Button>
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   )
