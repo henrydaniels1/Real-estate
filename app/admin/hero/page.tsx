@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Save, Loader2, Plus, Trash2, ImageIcon } from "lucide-react"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { toast } from "sonner"
 
 interface HeroContent {
   id: string
@@ -252,38 +254,16 @@ export default function AdminHeroPage() {
               <CardDescription>Upload or set the hero background image URL</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="background_image">Image URL</Label>
-                <Input
-                  id="background_image"
-                  value={heroContent?.background_image || ""}
-                  onChange={(e) =>
-                    setHeroContent((prev) =>
-                      prev ? { ...prev, background_image: e.target.value } : null
-                    )
-                  }
-                  placeholder="/images/hero.jpg"
-                />
-              </div>
-
-              {heroContent?.background_image && (
-                <div className="relative aspect-video overflow-hidden rounded-lg border">
-                  <img
-                    src={heroContent.background_image || "/placeholder.svg"}
-                    alt="Hero preview"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
-
-              {!heroContent?.background_image && (
-                <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed">
-                  <div className="text-center">
-                    <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">No image set</p>
-                  </div>
-                </div>
-              )}
+              <ImageUpload
+                label="Background Image"
+                value={heroContent?.background_image || ""}
+                onChange={(url) =>
+                  setHeroContent((prev) =>
+                    prev ? { ...prev, background_image: url } : null
+                  )
+                }
+                bucket="hero"
+              />
             </CardContent>
           </Card>
 

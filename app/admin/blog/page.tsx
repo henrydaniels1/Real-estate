@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/table"
 import { Plus, Pencil, Trash2, Loader2, Eye } from "lucide-react"
 import Link from "next/link"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { toast } from "sonner"
 
 interface BlogPost {
   id: string
@@ -221,17 +223,12 @@ export default function AdminBlogPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="image_url">Featured Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
+              <ImageUpload
+                label="Featured Image"
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                bucket="blog"
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="excerpt">Excerpt</Label>

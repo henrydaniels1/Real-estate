@@ -24,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Plus, Pencil, Trash2, Loader2, Star } from "lucide-react"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { toast } from "sonner"
 
 interface Testimonial {
   id: string
@@ -180,17 +182,12 @@ export default function AdminTestimonialsPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="avatar_url">Avatar URL</Label>
-                <Input
-                  id="avatar_url"
-                  value={formData.avatar_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, avatar_url: e.target.value })
-                  }
-                  placeholder="https://example.com/avatar.jpg"
-                />
-              </div>
+              <ImageUpload
+                label="Avatar Image"
+                value={formData.avatar_url}
+                onChange={(url) => setFormData({ ...formData, avatar_url: url })}
+                bucket="avatars"
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="content">Testimonial Content</Label>

@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select"
 import { Plus, Pencil, Trash2, Loader2, Eye, Star } from "lucide-react"
 import Link from "next/link"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { toast } from "sonner"
 
 interface Property {
   id: string
@@ -403,17 +405,12 @@ export default function AdminPropertiesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="image_url">Main Image URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image_url: e.target.value })
-                  }
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
+              <ImageUpload
+                label="Main Image"
+                value={formData.image_url}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                bucket="properties"
+              />
 
               <div className="flex items-center justify-between">
                 <div>
