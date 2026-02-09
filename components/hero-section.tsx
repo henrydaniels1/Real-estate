@@ -13,9 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Search } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 const propertyTypes = ["House", "Apartment", "Residential"]
 const filterOptions = ["City", "House", "Residential", "Apartment"]
+
+interface HeroContent {
+  title: string
+  subtitle: string
+  background_image: string
+}
 
 export function HeroSection() {
   const router = useRouter()
@@ -25,7 +32,32 @@ export function HeroSection() {
   const [rooms, setRooms] = useState("")
   const [activeFilters, setActiveFilters] = useState<string[]>([])
   const [isVisible, setIsVisible] = useState(false)
+  const [heroContent, setHeroContent] = useState<HeroContent>({
+    title: "Build Your Future, One Property at a Time.",
+    subtitle: "Discover exceptional properties that match your lifestyle. From luxury homes to investment opportunities, find your perfect space.",
+    background_image: "/images/hero.jpg"
+  })
   const sectionRef = useRef<HTMLElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchHeroContent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('hero_content')
+          .select('title, subtitle, background_image')
+          .single()
+        
+        if (data && !error) {
+          setHeroContent(data)
+        }
+      } catch (error) {
+        console.log('Using default hero content')
+      }
+    }
+
+    fetchHeroContent()
+  }, [supabase])
 
   useEffect(() => {
     const currentSectionRef = sectionRef.current;
@@ -48,7 +80,7 @@ export function HeroSection() {
         observer.unobserve(currentSectionRef);
       }
     };
-  }, []);
+  }, [])
 
   const toggleFilter = (filter: string) => {
     setActiveFilters((prev) =>
@@ -77,7 +109,7 @@ export function HeroSection() {
         transition={{ duration: 1.5, ease: "easeOut" }}
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/images/hero.jpg')",
+          backgroundImage: `url('${heroContent.background_image}')`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-background/80" />
@@ -113,7 +145,7 @@ export function HeroSection() {
           className="mb-8 max-w-2xl"
         >
           <h1 className="mb-6 font-serif text-4xl font-light leading-tight text-white md:text-5xl lg:text-6xl text-balance drop-shadow-lg">
-            Build Your Future, One Property at a Time.
+            {heroContent.title}
           </h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -121,7 +153,7 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="max-w-md text-sm leading-relaxed text-white/90 md:text-base drop-shadow-md"
           >
-            Discover exceptional properties that match your lifestyle. From luxury homes to investment opportunities, find your perfect space.
+            {heroContent.subtitle}
           </motion.p>
         </motion.div>
 

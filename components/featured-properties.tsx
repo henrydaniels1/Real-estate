@@ -7,52 +7,49 @@ import { motion } from "framer-motion"
 import { ArrowRight, Bath, BedDouble, MapPin, Maximize } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 
-const mockProperties = [
-  {
-    id: "1",
-    title: "Modern Villa with Ocean View",
-    city: "Bali",
-    country: "Indonesia",
-    price: 850000,
-    bedrooms: 4,
-    bathrooms: 3,
-    area_sqft: 3200,
-    property_type: "Villa",
-    image_url: "/images/property-1.jpg",
-    is_featured: true
-  },
-  {
-    id: "2",
-    title: "Luxury Apartment Downtown",
-    city: "Jakarta",
-    country: "Indonesia",
-    price: 650000,
-    bedrooms: 3,
-    bathrooms: 2,
-    area_sqft: 2100,
-    property_type: "Apartment",
-    image_url: "/images/property-2.jpg",
-    is_featured: true
-  },
-  {
-    id: "3",
-    title: "Family House with Garden",
-    city: "Surabaya",
-    country: "Indonesia",
-    price: 420000,
-    bedrooms: 3,
-    bathrooms: 2,
-    area_sqft: 2800,
-    property_type: "House",
-    image_url: "/images/property-3.jpg",
-    is_featured: true
-  }
-]
+interface Property {
+  id: string
+  title: string
+  city: string
+  country: string
+  price: number
+  bedrooms: number
+  bathrooms: number
+  area_sqft: number
+  property_type: string
+  image_url: string
+  is_featured: boolean
+}
 
 export function FeaturedProperties() {
   const [isVisible, setIsVisible] = useState(false)
+  const [properties, setProperties] = useState<Property[]>([])
   const sectionRef = useRef<HTMLElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('is_featured', true)
+          .eq('status', 'available')
+          .order('created_at', { ascending: false })
+          .limit(3)
+        
+        if (data && !error) {
+          setProperties(data)
+        }
+      } catch (error) {
+        console.log('Using default properties')
+      }
+    }
+
+    fetchProperties()
+  }, [supabase])
 
   useEffect(() => {
     const currentSectionRef = sectionRef.current;
@@ -75,7 +72,7 @@ export function FeaturedProperties() {
         observer.unobserve(currentSectionRef);
       }
     };
-  }, []);
+  }, [])
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -127,7 +124,7 @@ export function FeaturedProperties() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {mockProperties?.map((property, index) => (
+          {properties?.map((property, index) => (
             <motion.div
               key={property.id}
               initial={{ opacity: 0, y: 30 }}
@@ -197,7 +194,7 @@ export function FeaturedProperties() {
           ))}
         </motion.div>
 
-        {(!mockProperties || mockProperties.length === 0) && (
+        {(!properties || properties.length === 0) && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

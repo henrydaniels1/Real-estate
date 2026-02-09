@@ -4,37 +4,46 @@ import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { Star } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { createClient } from "@/lib/supabase/client"
 
-const testimonials = [
-  {
-    name: "Sarah Chen",
-    role: "Home Buyer",
-    content:
-      "EverGreen made finding our dream home so easy. The verified listings gave us confidence, and our agent was incredibly helpful throughout the process.",
-    rating: 5,
-    initials: "SC",
-  },
-  {
-    name: "Michael Wijaya",
-    role: "Property Investor",
-    content:
-      "The market insights feature helped me make smart investment decisions. I've purchased three properties through EverGreen and couldn't be happier.",
-    rating: 5,
-    initials: "MW",
-  },
-  {
-    name: "Putri Rahmawati",
-    role: "First-time Seller",
-    content:
-      "Selling my apartment was stress-free with EverGreen. They handled everything professionally and got me a great price in just two weeks.",
-    rating: 5,
-    initials: "PR",
-  },
-]
+interface Testimonial {
+  id: string
+  name: string
+  role: string
+  content: string
+  rating: number
+  initials: string
+}
 
 export function TestimonialsSection() {
   const [isVisible, setIsVisible] = useState(false)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const sectionRef = useRef<HTMLElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(3)
+        
+        if (data && !error) {
+          setTestimonials(data.map(t => ({
+            ...t,
+            initials: t.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+          })))
+        }
+      } catch (error) {
+        console.log('Using default testimonials')
+      }
+    }
+
+    fetchTestimonials()
+  }, [supabase])
 
   useEffect(() => {
     const currentSectionRef = sectionRef.current;
@@ -57,7 +66,7 @@ export function TestimonialsSection() {
         observer.unobserve(currentSectionRef);
       }
     };
-  }, []);
+  }, [])
 
   return (
     <section ref={sectionRef} className="bg-background py-20 md:py-28">
@@ -100,9 +109,9 @@ export function TestimonialsSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="grid gap-8 md:grid-cols-3"
         >
-          {testimonials.map((testimonial, index) => (
+          {testimonials.length > 0 ? testimonials.map((testimonial, index) => (
             <motion.div
-              key={index}
+              key={testimonial.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
               transition={{ duration: 0.6, delay: 0.6 + index * 0.2 }}
@@ -136,7 +145,11 @@ export function TestimonialsSection() {
                 </div>
               </div>
             </motion.div>
-          ))}
+          )) : (
+            <div className="col-span-3 text-center py-8">
+              <p className="text-muted-foreground">No testimonials available at the moment.</p>
+            </div>
+          )}
         </motion.div>
       </div>
     </section>

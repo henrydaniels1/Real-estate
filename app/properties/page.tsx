@@ -60,8 +60,19 @@ export default async function PropertiesPage() {
   }
 
   if (error) {
-    console.error("Error fetching properties:", error)
+    console.error("Error fetching properties:", {
+      message: error?.message || 'No message',
+      details: error?.details || 'No details',
+      hint: error?.hint || 'No hint',
+      code: error?.code || 'No code',
+      full_error: error,
+      error_type: typeof error,
+      error_keys: Object.keys(error || {})
+    })
   }
+
+  // Also log the raw response for debugging
+  console.log("Raw properties response:", { data: rawProperties, error, count: rawProperties?.length })
 
   return (
     <PropertiesClient

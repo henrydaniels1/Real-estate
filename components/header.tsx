@@ -5,7 +5,8 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Globe, Menu, X } from "lucide-react"
+import { Globe, Menu, X, Settings } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -17,8 +18,11 @@ const navLinks = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isVisible, setIsVisible] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const headerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
+  const supabase = useRef(createClient()).current
   
   useEffect(() => {
     const currentHeaderRef = headerRef.current;
@@ -41,6 +45,33 @@ export function Header() {
         observer.unobserve(currentHeaderRef);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      
+      if (user) {
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        
+        setIsAdmin(!!adminUser)
+      } else {
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdminStatus()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAdminStatus()
+    })
+
+    return () => subscription.unsubscribe()
   }, []);
   
   const isActive = (href: string) => {
@@ -88,16 +119,38 @@ export function Header() {
           <Button variant="ghost" size="icon" className="rounded-full">
             <Globe className="h-5 w-5" />
           </Button>
-          <Link href="/auth/login">
-            <Button variant="ghost" className="rounded-full">
-              Log In
+          {isAdmin && (
+            <Link href="/admin">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+          {user ? (
+            <Button 
+              variant="ghost" 
+              className="rounded-full"
+              onClick={async () => {
+                await supabase.auth.signOut()
+                window.location.reload()
+              }}
+            >
+              Sign Out
             </Button>
-          </Link>
-          <Link href="/auth/sign-up">
-            <Button className="rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
-              Sign Up
-            </Button>
-          </Link>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <Button variant="ghost" className="rounded-full">
+                  Log In
+                </Button>
+              </Link>
+              <Link href="/auth/sign-up">
+                <Button className="rounded-full bg-primary px-6 text-primary-foreground hover:bg-primary/90">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -130,16 +183,39 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-4 flex flex-col gap-2">
-              <Link href="/auth/login">
-                <Button variant="outline" className="w-full rounded-full bg-transparent">
-                  Log In
+              {isAdmin && (
+                <Link href="/admin">
+                  <Button variant="outline" className="w-full rounded-full bg-transparent">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Admin Panel
+                  </Button>
+                </Link>
+              )}
+              {user ? (
+                <Button 
+                  variant="outline" 
+                  className="w-full rounded-full bg-transparent"
+                  onClick={async () => {
+                    await supabase.auth.signOut()
+                    window.location.reload()
+                  }}
+                >
+                  Sign Out
                 </Button>
-              </Link>
-              <Link href="/auth/sign-up">
-                <Button className="w-full rounded-full bg-primary text-primary-foreground">
-                  Sign Up
-                </Button>
-              </Link>
+              ) : (
+                <>
+                  <Link href="/auth/login">
+                    <Button variant="outline" className="w-full rounded-full bg-transparent">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/sign-up">
+                    <Button className="w-full rounded-full bg-primary text-primary-foreground">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>

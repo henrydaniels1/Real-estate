@@ -53,16 +53,20 @@ export default function ContactPage() {
 
     const supabase = createClient()
     
-    const { error } = await supabase.from("inquiries").insert({
+    // Use general_inquiries table for contact form submissions
+    const { error } = await supabase.from("general_inquiries").insert({
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      message: `Subject: ${formData.subject}\n\n${formData.message}`,
+      subject: formData.subject,
+      message: formData.message,
     })
 
     if (!error) {
       setIsSubmitted(true)
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
+    } else {
+      console.error("Error submitting contact form:", error)
     }
     
     setIsSubmitting(false)
