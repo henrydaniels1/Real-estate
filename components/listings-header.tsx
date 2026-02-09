@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,6 +39,11 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
   const router = useRouter()
   const supabase = createClient()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -88,7 +93,7 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
 
           {/* Desktop User Menu */}
           <div className="hidden lg:flex">
-            {user ? (
+            {user && isMounted ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -136,7 +141,7 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : !user && isMounted ? (
               <div className="flex items-center gap-2">
                 <Link href="/auth/login">
                   <Button variant="ghost" className="rounded-full">
@@ -149,7 +154,7 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
                   </Button>
                 </Link>
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Menu Button */}

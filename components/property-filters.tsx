@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -29,36 +29,26 @@ interface PropertyFiltersProps {
   filters: FilterState
   onFiltersChange: (filters: FilterState) => void
   onClearAll: () => void
+  locationOptions?: string[]
+  propertyTypeOptions?: string[]
+  amenityOptions?: string[]
 }
-
-const locationOptions = [
-  "Jakarta, Indonesia",
-  "Semarang, Indonesia",
-  "Bali, Indonesia",
-  "Surabaya, Indonesia",
-]
-
-const priceRangeOptions = [
-  { value: "under-1000", label: "Under $1,000" },
-  { value: "1000-15000", label: "$1,000 - $15,000" },
-  { value: "over-15000", label: "More Than $15,000" },
-  { value: "custom", label: "Custom" },
-]
-
-const propertyTypeOptions = [
-  "Single Family Home",
-  "Condo/Townhouse",
-  "Apartment",
-  "Bungalow",
-]
-
-const amenityOptions = ["Garden", "Gym", "Garage", "Pool", "Security"]
 
 export function PropertyFilters({
   filters,
   onFiltersChange,
   onClearAll,
+  locationOptions = [],
+  propertyTypeOptions = [],
+  amenityOptions = [],
 }: PropertyFiltersProps) {
+  const [isMounted, setIsMounted] = useState(false)
+  const priceRangeOptions = [
+    { value: "under-1000", label: "Under $1,000" },
+    { value: "1000-15000", label: "$1,000 - $15,000" },
+    { value: "over-15000", label: "More Than $15,000" },
+    { value: "custom", label: "Custom" },
+  ]
   const [openSections, setOpenSections] = useState({
     location: true,
     price: true,
@@ -66,6 +56,34 @@ export function PropertyFilters({
     type: true,
     amenities: true,
   })
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return (
+      <aside className="w-full space-y-4 lg:w-64">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Custom Filter</h2>
+          <Button
+            variant="link"
+            className="h-auto p-0 text-sm text-primary"
+            onClick={onClearAll}
+          >
+            Clear all
+          </Button>
+        </div>
+        <div className="space-y-4">
+          <div className="h-20 bg-muted/20 rounded animate-pulse" />
+          <div className="h-32 bg-muted/20 rounded animate-pulse" />
+          <div className="h-24 bg-muted/20 rounded animate-pulse" />
+          <div className="h-28 bg-muted/20 rounded animate-pulse" />
+          <div className="h-36 bg-muted/20 rounded animate-pulse" />
+        </div>
+      </aside>
+    )
+  }
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))

@@ -43,6 +43,11 @@ interface PropertiesClientProps {
   pageTitle?: string
   pageDescription?: string
   isRentPage?: boolean
+  filterOptions: {
+    locations: string[]
+    propertyTypes: string[]
+    amenities: string[]
+  }
 }
 
 const defaultFilters = {
@@ -61,6 +66,7 @@ export function PropertiesClient({
   initialFavorites,
   user,
   isRentPage = false,
+  filterOptions,
 }: PropertiesClientProps) {
   const [filters, setFilters] = useState(defaultFilters)
   const [favorites, setFavorites] = useState<string[]>(initialFavorites)
@@ -184,6 +190,7 @@ export function PropertiesClient({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      suppressHydrationWarning
     >
       <ListingsHeader user={user} activeTab={isRentPage ? "rent" : "buy"} />
 
@@ -203,6 +210,9 @@ export function PropertiesClient({
               filters={filters}
               onFiltersChange={setFilters}
               onClearAll={() => setFilters(defaultFilters)}
+              locationOptions={filterOptions.locations}
+              propertyTypeOptions={filterOptions.propertyTypes}
+              amenityOptions={filterOptions.amenities}
             />
           </motion.div>
 

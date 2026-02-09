@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { PropertiesClient } from "./properties-client"
+import { getFilterOptions } from "./actions"
 
 export default async function PropertiesPage() {
   const supabase = await createClient()
@@ -74,11 +75,14 @@ export default async function PropertiesPage() {
   // Also log the raw response for debugging
   console.log("Raw properties response:", { data: rawProperties, error, count: rawProperties?.length })
 
+  const filterOptions = await getFilterOptions()
+
   return (
     <PropertiesClient
       initialProperties={properties}
       initialFavorites={favorites}
       user={userData}
+      filterOptions={filterOptions}
     />
   )
 }

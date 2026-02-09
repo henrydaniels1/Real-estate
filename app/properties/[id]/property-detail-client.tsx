@@ -15,6 +15,11 @@ import {
   Star,
   Phone,
   Mail,
+  BedDouble,
+  Bath,
+  ChefHat,
+  Maximize,
+  Car,
 } from "lucide-react"
 import { ListingsHeader } from "@/components/listings-header"
 import { Footer } from "@/components/footer"
@@ -22,9 +27,16 @@ import { Footer } from "@/components/footer"
 interface PropertyDetailClientProps {
   property: any
   userData: any
-  amenities: any[]
+  amenities: { label: string; value: any }[]
   images: string[]
-  formatPrice: (price: number) => string
+}
+
+const iconMap: Record<string, any> = {
+  Bedrooms: BedDouble,
+  Bathrooms: Bath,
+  Kitchen: ChefHat,
+  sqft: Maximize,
+  Garage: Car,
 }
 
 export function PropertyDetailClient({
@@ -32,8 +44,15 @@ export function PropertyDetailClient({
   userData,
   amenities,
   images,
-  formatPrice,
 }: PropertyDetailClientProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price)
+  }
   return (
     <motion.div 
       className="min-h-screen bg-background"
@@ -178,24 +197,27 @@ export function PropertyDetailClient({
 
               {/* Amenities */}
               <div className="mb-6 flex flex-wrap gap-4">
-                {amenities.map((amenity, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 + index * 0.1, duration: 0.3 }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <amenity.icon className="h-5 w-5 text-primary" />
-                    <span className="font-medium text-foreground">
-                      {amenity.value}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {amenity.label}
-                    </span>
-                  </motion.div>
-                ))}
+                {amenities.map((amenity, index) => {
+                  const Icon = iconMap[amenity.label]
+                  return (
+                    <motion.div
+                      key={index}
+                      className="flex items-center gap-2 rounded-lg bg-muted px-4 py-2"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + index * 0.1, duration: 0.3 }}
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      {Icon && <Icon className="h-5 w-5 text-primary" />}
+                      <span className="font-medium text-foreground">
+                        {amenity.value}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {amenity.label}
+                      </span>
+                    </motion.div>
+                  )
+                })}
               </div>
             </motion.div>
 
@@ -221,19 +243,63 @@ export function PropertyDetailClient({
                     {property.description ||
                       "Welcome to this beautiful property. Experience a peaceful escape at this modern retreat set on a quiet hillside with stunning views of valleys and starry nights. This property offers a perfect blend of comfort and style, making it ideal for families or professionals seeking a premium living experience."}
                   </p>
-                  <p className="leading-relaxed text-muted-foreground">
-                    The property features modern architecture with spacious rooms,
-                    natural lighting, and premium finishes throughout. The
-                    open-plan living area seamlessly connects to a fully equipped
-                    kitchen and dining space, perfect for entertaining guests.
-                  </p>
+                  
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-lg border border-border p-4">
+                      <h3 className="mb-2 font-semibold text-foreground">Property Details</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Type:</span>
+                          <span className="font-medium text-foreground capitalize">{property.property_type}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Status:</span>
+                          <span className="font-medium text-foreground capitalize">{property.status.replace('_', ' ')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Area:</span>
+                          <span className="font-medium text-foreground">{property.area_sqft?.toLocaleString()} sqft</span>
+                        </div>
+                        {property.state && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">State:</span>
+                            <span className="font-medium text-foreground">{property.state}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="rounded-lg border border-border p-4">
+                      <h3 className="mb-2 font-semibold text-foreground">Location</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Address:</span>
+                          <span className="font-medium text-foreground text-right">{property.address}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">City:</span>
+                          <span className="font-medium text-foreground">{property.city}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Country:</span>
+                          <span className="font-medium text-foreground">{property.country}</span>
+                        </div>
+                        {(property.latitude && property.longitude) && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Coordinates:</span>
+                            <span className="font-medium text-foreground text-xs">{property.latitude}, {property.longitude}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="features">
                   <h2 className="mb-4 text-xl font-semibold text-foreground">
-                    Property Features
+                    Property Features & Amenities
                   </h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {(property.amenities || ["Garden", "Gym", "Garage", "Pool", "Security", "Air Conditioning"]).map(
                       (amenity: string, index: number) => (
                         <motion.div
@@ -253,6 +319,32 @@ export function PropertyDetailClient({
                         </motion.div>
                       )
                     )}
+                  </div>
+                  
+                  <div className="mt-6 rounded-lg bg-muted/50 p-4">
+                    <h3 className="mb-3 font-semibold text-foreground">Room Details</h3>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{property.bedrooms}</span>
+                        <span className="text-sm text-muted-foreground">Bedrooms</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{property.bathrooms}</span>
+                        <span className="text-sm text-muted-foreground">Bathrooms</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{property.kitchens || 1}</span>
+                        <span className="text-sm text-muted-foreground">Kitchens</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{property.garages || 0}</span>
+                        <span className="text-sm text-muted-foreground">Garages</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-primary">{property.area_sqft?.toLocaleString()}</span>
+                        <span className="text-sm text-muted-foreground">Sq Ft</span>
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
 

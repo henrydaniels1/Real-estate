@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { PropertiesClient } from "../properties/properties-client"
+import { getFilterOptions } from "../properties/actions"
 
 export const metadata = {
   title: "Rent Properties | EverGreen",
@@ -62,6 +63,8 @@ export default async function RentPage() {
       }
     : null
 
+  const filterOptions = await getFilterOptions()
+
   return (
     <PropertiesClient
       initialProperties={properties}
@@ -70,6 +73,7 @@ export default async function RentPage() {
       pageTitle="Rental Properties"
       pageDescription="Find your perfect rental home"
       isRentPage={true}
+      filterOptions={filterOptions}
     />
   )
 }

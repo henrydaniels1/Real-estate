@@ -34,6 +34,7 @@ import {
 import { Plus, Pencil, Trash2, Loader2, Eye, Star } from "lucide-react"
 import Link from "next/link"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { GalleryUpload } from "@/components/ui/gallery-upload"
 import { toast } from "sonner"
 
 interface Property {
@@ -92,6 +93,7 @@ export default function AdminPropertiesPage() {
     bathrooms: "2",
     area_sqft: "",
     image_url: "",
+    gallery_images: [] as string[],
     is_featured: false,
     rating: "4.5",
   })
@@ -126,6 +128,7 @@ export default function AdminPropertiesPage() {
         bathrooms: property.bathrooms.toString(),
         area_sqft: property.area_sqft?.toString() || "",
         image_url: property.image_url || "",
+        gallery_images: (property as any).images || [],
         is_featured: property.is_featured || false,
         rating: property.rating?.toString() || "4.5",
       })
@@ -144,6 +147,7 @@ export default function AdminPropertiesPage() {
         bathrooms: "2",
         area_sqft: "",
         image_url: "",
+        gallery_images: [],
         is_featured: false,
         rating: "4.5",
       })
@@ -167,6 +171,7 @@ export default function AdminPropertiesPage() {
       bathrooms: parseInt(formData.bathrooms) || 0,
       area_sqft: parseInt(formData.area_sqft) || 0,
       image_url: formData.image_url || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+      images: formData.gallery_images,
       is_featured: formData.is_featured,
       rating: parseFloat(formData.rating) || 4.5,
     }
@@ -411,6 +416,17 @@ export default function AdminPropertiesPage() {
                 onChange={(url) => setFormData({ ...formData, image_url: url })}
                 bucket="properties"
               />
+
+              <div className="space-y-2">
+                <Label>Gallery Images (Optional)</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Add up to 6 additional images for the property gallery
+                </p>
+                <GalleryUpload
+                  images={formData.gallery_images || []}
+                  onChange={(images) => setFormData({ ...formData, gallery_images: images })}
+                />
+              </div>
 
               <div className="flex items-center justify-between">
                 <div>
