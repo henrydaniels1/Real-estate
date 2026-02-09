@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
@@ -7,10 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
 import {
   ArrowLeft,
   Heart,
   Share2,
+  Download,
   MapPin,
   Star,
   Phone,
@@ -23,12 +26,14 @@ import {
 } from "lucide-react"
 import { ListingsHeader } from "@/components/listings-header"
 import { Footer } from "@/components/footer"
+import { toggleFavorite } from "./actions"
 
 interface PropertyDetailClientProps {
   property: any
   userData: any
   amenities: { label: string; value: any }[]
   images: string[]
+  isFavorite: boolean
 }
 
 const iconMap: Record<string, any> = {
@@ -44,7 +49,116 @@ export function PropertyDetailClient({
   userData,
   amenities,
   images,
+  isFavorite: initialIsFavorite,
 }: PropertyDetailClientProps) {
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+
+  const handleFavoriteToggle = async () => {
+    if (!userData) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add properties to favorites.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const result = await toggleFavorite(property.id)
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+      } else {
+        setIsFavorite(result.isFavorite)
+        toast({
+          title: result.isFavorite ? "Added to favorites" : "Removed from favorites",
+          description: result.isFavorite 
+            ? "Property has been added to your favorites." 
+            : "Property has been removed from your favorites.",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleShare = async () => {
+    const url = window.location.href
+    const title = property.title
+    const text = `Check out this amazing property: ${title}`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url })
+      } catch (error) {
+        // User cancelled sharing or error occurred
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(url)
+        toast({
+          title: "Link copied!",
+          description: "Property link has been copied to your clipboard.",
+        })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to copy link to clipboard.",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
+  const handleDownload = async () => {
+    try {
+      const imageUrl = images[selectedImage]
+      if (!imageUrl) {
+        toast({
+          title: "Error",
+          description: "No image available to download.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${property.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_image_${selectedImage + 1}.jpg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      
+      toast({
+        title: "Download started",
+        description: "Image is being downloaded to your device.",
+      })
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Failed to download the image. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -94,7 +208,7 @@ export function PropertyDetailClient({
                 transition={{ duration: 0.3 }}
               >
                 <Image
-                  src={property.image_url || "/placeholder.svg"}
+                  src={images[selectedImage] || "/placeholder.svg"}
                   alt={property.title}
                   fill
                   className="object-cover"
@@ -122,8 +236,10 @@ export function PropertyDetailClient({
                       variant="secondary"
                       size="icon"
                       className="h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm"
+                      onClick={handleFavoriteToggle}
+                      disabled={isLoading}
                     >
-                      <Heart className="h-5 w-5" />
+                      <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                     </Button>
                   </motion.div>
                   <motion.div
@@ -137,6 +253,23 @@ export function PropertyDetailClient({
                       variant="secondary"
                       size="icon"
                       className="h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm"
+                      onClick={handleDownload}
+                    >
+                      <Download className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-card/80 backdrop-blur-sm"
+                      onClick={handleShare}
                     >
                       <Share2 className="h-5 w-5" />
                     </Button>
@@ -144,14 +277,17 @@ export function PropertyDetailClient({
                 </div>
               </motion.div>
               <div className="grid grid-cols-3 gap-4">
-                {images.slice(0, 3).map((img: string, index: number) => (
+                {images.slice(0, 6).map((img: string, index: number) => (
                   <motion.div
                     key={index}
-                    className="relative aspect-video overflow-hidden rounded-lg"
+                    className={`relative aspect-video overflow-hidden rounded-lg cursor-pointer border-2 transition-all ${
+                      selectedImage === index ? 'border-primary' : 'border-transparent hover:border-muted-foreground/50'
+                    }`}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
                     whileHover={{ scale: 1.05 }}
+                    onClick={() => setSelectedImage(index)}
                   >
                     <Image
                       src={img || "/placeholder.svg"}
@@ -159,6 +295,9 @@ export function PropertyDetailClient({
                       fill
                       className="object-cover"
                     />
+                    {selectedImage === index && (
+                      <div className="absolute inset-0 bg-primary/20" />
+                    )}
                   </motion.div>
                 ))}
               </div>

@@ -194,12 +194,12 @@ export function PropertiesClient({
     >
       <ListingsHeader user={user} activeTab={isRentPage ? "rent" : "buy"} />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 ">
-        <div className="">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="lg:flex lg:gap-6">
           
           {/* Filters Sidebar */}
           <motion.div
-            className={`fixed inset-y-0 left-0 z-40 w-72 transform bg-card p-4 shadow-lg transition-transform lg:relative lg:z-0 lg:w-64 lg:transform-none lg:bg-transparent lg:p-0 lg:shadow-none ${
+            className={`fixed inset-y-0 left-0 z-40 w-72 transform bg-card p-4 shadow-lg transition-transform lg:relative lg:z-0 lg:w-64 lg:transform-none lg:bg-transparent lg:p-0 lg:shadow-none lg:flex-shrink-0 ${
               showFilters ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             }`}
             initial={{ x: -300 }}
@@ -231,135 +231,137 @@ export function PropertiesClient({
           </AnimatePresence>
 
           {/* Properties Grid */}
-          <div className="flex-1 ">
-            {/* Mobile Filter Toggle */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-              className="lg:hidden mb-4"
-            >
-              <Button
-                variant="outline"
-                className="bg-card shadow-sm border-border"
-                onClick={() => setShowFilters(!showFilters)}
+          <div className="flex-1 lg:flex lg:gap-6">
+            <div className="flex-1">
+              {/* Mobile Filter Toggle */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                className="lg:hidden mb-4"
               >
-                {showFilters ? (
-                  <X className="mr-2 h-4 w-4" />
-                ) : (
-                  <Menu className="mr-2 h-4 w-4" />
-                )}
-                Filters
-              </Button>
-            </motion.div>
-            
-            <motion.div 
-              className="mb-4 text-sm text-muted-foreground"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {filteredProperties.length} properties found
-            </motion.div>
-            <motion.div 
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              {filteredProperties.map((property, index) => (
-                <motion.div
-                  key={property.id}
-                  onClick={() => handlePropertySelect(property)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      handlePropertySelect(property)
-                    }
-                  }}
-                  className="cursor-pointer"
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`View details for ${property.title} in ${property.location}`}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    delay: index * 0.1,
-                    duration: 0.5,
-                    type: "spring",
-                    stiffness: 100
-                  }}
-                  whileHover={{ 
-                    scale: 1.02,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
+                <Button
+                  variant="outline"
+                  className="bg-card shadow-sm border-border"
+                  onClick={() => setShowFilters(!showFilters)}
                 >
-                  <PropertyCard
-                    id={property.id}
-                    title={property.title}
-                    location={property.location}
-                    price={property.price}
-                    rating={property.rating || 4.5}
-                    imageUrl={property.image_url}
-                    propertyType={property.property_type}
-                    status={property.status || (isRentPage ? "for_rent" : "for_sale")}
-                    isFavorite={favorites.includes(property.id)}
-                    onFavoriteToggle={handleFavoriteToggle}
+                  {showFilters ? (
+                    <X className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Menu className="mr-2 h-4 w-4" />
+                  )}
+                  Filters
+                </Button>
+              </motion.div>
+              
+              <motion.div 
+                className="mb-4 text-sm text-muted-foreground"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {filteredProperties.length} properties found
+              </motion.div>
+              <motion.div 
+                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                {filteredProperties.map((property, index) => (
+                  <motion.div
+                    key={property.id}
+                    onClick={() => handlePropertySelect(property)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handlePropertySelect(property)
+                      }
+                    }}
+                    className="cursor-pointer"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View details for ${property.title} in ${property.location}`}
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      delay: index * 0.1,
+                      duration: 0.5,
+                      type: "spring",
+                      stiffness: 100
+                    }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      transition: { duration: 0.2 }
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <PropertyCard
+                      id={property.id}
+                      title={property.title}
+                      location={property.location}
+                      price={property.price}
+                      rating={property.rating || 4.5}
+                      imageUrl={property.image_url}
+                      propertyType={property.property_type}
+                      status={property.status || (isRentPage ? "for_rent" : "for_sale")}
+                      isFavorite={favorites.includes(property.id)}
+                      onFavoriteToggle={handleFavoriteToggle}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {filteredProperties.length === 0 && (
+                <motion.div 
+                  className="flex flex-col items-center justify-center py-12 text-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                >
+                  <p className="text-lg font-medium text-foreground">
+                    No properties found
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Try adjusting your filters to see more results.
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Property Detail Panel */}
+            <AnimatePresence>
+              {selectedProperty && (
+                <motion.div 
+                  className="hidden w-96 lg:block lg:flex-shrink-0"
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 100 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <PropertyDetailPanel
+                    property={{
+                      id: selectedProperty.id,
+                      title: selectedProperty.title,
+                      location: selectedProperty.location,
+                      price: selectedProperty.price,
+                      description:
+                        selectedProperty.description ||
+                        "Welcome to this beautiful property. Experience a peaceful escape at this modern retreat set on a quiet hillside with stunning views of valleys and starry nights.",
+                      bedrooms: selectedProperty.bedrooms,
+                      bathrooms: selectedProperty.bathrooms,
+                      kitchens: selectedProperty.kitchens || 1,
+                      area: selectedProperty.area,
+                      garages: selectedProperty.garages || 1,
+                      imageUrl: selectedProperty.image_url,
+                      images: selectedProperty.images || [],
+                    }}
+                    onClose={() => setSelectedProperty(null)}
                   />
                 </motion.div>
-              ))}
-            </motion.div>
-
-            {filteredProperties.length === 0 && (
-              <motion.div 
-                className="flex flex-col items-center justify-center py-12 text-center"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <p className="text-lg font-medium text-foreground">
-                  No properties found
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Try adjusting your filters to see more results.
-                </p>
-              </motion.div>
-            )}
+              )}
+            </AnimatePresence>
           </div>
-
-          {/* Property Detail Panel */}
-          <AnimatePresence>
-            {selectedProperty && (
-              <motion.div 
-                className="hidden w-96 lg:block"
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 100 }}
-                transition={{ duration: 0.3 }}
-              >
-                <PropertyDetailPanel
-                  property={{
-                    id: selectedProperty.id,
-                    title: selectedProperty.title,
-                    location: selectedProperty.location,
-                    price: selectedProperty.price,
-                    description:
-                      selectedProperty.description ||
-                      "Welcome to this beautiful property. Experience a peaceful escape at this modern retreat set on a quiet hillside with stunning views of valleys and starry nights.",
-                    bedrooms: selectedProperty.bedrooms,
-                    bathrooms: selectedProperty.bathrooms,
-                    kitchens: selectedProperty.kitchens || 1,
-                    area: selectedProperty.area,
-                    garages: selectedProperty.garages || 1,
-                    imageUrl: selectedProperty.image_url,
-                    images: selectedProperty.images || [],
-                  }}
-                  onClose={() => setSelectedProperty(null)}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
       <Footer />

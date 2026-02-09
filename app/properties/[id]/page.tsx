@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { PropertyDetailClient } from "./property-detail-client"
+import { checkIsFavorite } from "./actions"
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -50,12 +51,15 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     ? [property.image_url, ...property.images].filter(Boolean)
     : [property.image_url]
 
+  const isFavorite = await checkIsFavorite(id)
+
   return (
     <PropertyDetailClient 
       property={property}
       userData={userData}
       amenities={amenities}
       images={images}
+      isFavorite={isFavorite}
     />
   )
 }
