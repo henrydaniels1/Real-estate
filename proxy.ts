@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
       .from('admin_users')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     // Redirect to home if not admin
     if (!adminUser) {

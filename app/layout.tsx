@@ -9,25 +9,11 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'EverGreen | Build Your Future, One Property at a Time',
+title: 'Ched Real Estate | Build Your Future, One Property at a Time',
   description: 'Find your dream property with EverGreen. Browse houses, apartments, and residential properties with our comprehensive real estate platform.',
-  generator: 'v0.app',
+  generator: 'Ched',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/ched4.png',
   },
 }
 

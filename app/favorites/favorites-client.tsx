@@ -1,20 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PropertyCard } from "@/components/property-card"
 import { createClient } from "@/lib/supabase/client"
-
-interface Property {
-  id: string
-  title: string
-  location: string
-  price: number
-  rating: number
-  image_url: string
-  property_type: string
-  status?: string
-}
+import type { Property } from "@/types/property"
 
 interface FavoritesClientProps {
   initialProperties: Property[]
@@ -26,7 +16,7 @@ export function FavoritesClient({
   userId,
 }: FavoritesClientProps) {
   const [properties, setProperties] = useState(initialProperties)
-  const supabase = createClient()
+  const supabase = useRef(createClient()).current
 
   const handleFavoriteToggle = async (propertyId: string) => {
     // Store current state for rollback

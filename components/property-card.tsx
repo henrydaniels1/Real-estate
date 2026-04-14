@@ -7,8 +7,13 @@ import { Heart, MapPin, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { formatPrice } from "@/lib/utils"
+
+const badgeVariants: Record<string, string> = {
+  house: "bg-red-500 text-red-50",
+  apartment: "bg-blue-500 text-blue-50",
+  villa: "bg-amber-500 text-amber-50",
+}
 
 interface PropertyCardProps {
   id: string
@@ -35,22 +40,11 @@ export function PropertyCard({
   isFavorite = false,
   onFavoriteToggle,
 }: PropertyCardProps) {
-  const { ref, isInView } = useScrollAnimation()
-
-  const getBadgeVariant = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "house": return "bg-red-500 text-red-50"
-      case "apartment": return "bg-blue-500 text-blue-50"
-      case "villa": return "bg-amber-500 text-amber-50"
-      default: return "bg-primary text-primary-foreground"
-    }
-  }
-
   return (
     <motion.div
-      ref={ref}
       initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
       transition={{ duration: 0.6 }}
       whileHover={{ y: -5 }}
     >
@@ -64,7 +58,7 @@ export function PropertyCard({
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
-          <Badge className={`absolute top-3 left-3 ${getBadgeVariant(propertyType)}`}>
+          <Badge className={`absolute top-3 left-3 ${badgeVariants[propertyType.toLowerCase()] ?? "bg-primary text-primary-foreground"}`}>
             {propertyType}
           </Badge>
           <Button

@@ -20,7 +20,7 @@ export default async function AdminDashboardPage() {
     .from("admin_users")
     .select("*")
     .eq("id", user.id)
-    .single()
+    .maybeSingle()
 
   if (!adminUser) {
     redirect("/")

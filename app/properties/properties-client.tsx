@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ListingsHeader } from "@/components/listings-header"
 import { PropertyFilters } from "@/components/property-filters"
@@ -8,38 +8,14 @@ import { PropertyCard } from "@/components/property-card"
 import { PropertyDetailPanel } from "@/components/property-detail-panel"
 import { Footer } from "@/components/footer"
 import { createClient } from "@/lib/supabase/client"
+import type { Property, User } from "@/types/property"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
-
-interface Property {
-  id: string
-  title: string
-  description: string
-  price: number
-  location: string
-  address: string
-  property_type: string
-  bedrooms: number
-  bathrooms: number
-  area: number
-  image_url: string
-  images: string[]
-  amenities: string[]
-  rating: number
-  status?: string
-  kitchens?: number
-  garages?: number
-}
 
 interface PropertiesClientProps {
   initialProperties: Property[]
   initialFavorites: string[]
-  user: {
-    id?: string
-    name: string
-    email: string
-    avatarUrl?: string
-  } | null
+  user: User | null
   pageTitle?: string
   pageDescription?: string
   isRentPage?: boolean
@@ -74,8 +50,7 @@ export function PropertiesClient({
     null
   )
   const [showFilters, setShowFilters] = useState(false)
-
-  const supabase = createClient()
+  const supabase = useRef(createClient()).current
 
   const filteredProperties = useMemo(() => {
     const { locations, priceRange, customPriceMin, customPriceMax, landAreaMin, landAreaMax, propertyTypes, amenities } = filters
