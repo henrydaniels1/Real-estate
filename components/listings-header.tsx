@@ -60,7 +60,7 @@ export function ListingsHeader({ user, activeTab = "buy" }: ListingsHeaderProps)
             <Home className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="text-lg font-semibold text-foreground">
-            EstateEase
+            EverGreen
           </span>
         </Link>
 

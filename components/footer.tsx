@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Facebook, Instagram, Linkedin, Twitter } from "lucide-react"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 const footerLinks = {
   company: [
@@ -39,44 +39,20 @@ const socialLinks = [
 ]
 
 export function Footer() {
-  const [isVisible, setIsVisible] = useState(false)
-  const footerRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const currentFooterRef = footerRef.current;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2,
-      }
-    );
-
-    if (currentFooterRef) {
-      observer.observe(currentFooterRef);
-    }
-
-    return () => {
-      if (currentFooterRef) {
-        observer.unobserve(currentFooterRef);
-      }
-    };
-  }, []);
+  const { ref, isInView } = useScrollAnimation()
 
   return (
-    <motion.footer 
-      ref={footerRef}
+    <motion.footer
+      ref={ref}
       initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+      animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
       transition={{ duration: 0.8 }}
       className="bg-muted/50 pt-16 pb-8"
     >
       <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: isVisible ? 1 : 0 }}
+          animate={{ opacity: isInView ? 1 : 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-12 grid gap-8 md:grid-cols-2 lg:grid-cols-5"
         >
@@ -103,78 +79,30 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div className="grid grid-cols-2 lg:col-span-4 grid-cols-2 gap-8 md:grid-cols-4">
-        <div>
-            <h4 className="mb-4 font-semibold text-foreground">Company</h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-2 lg:col-span-4 gap-8 md:grid-cols-4">
+            {Object.entries(footerLinks).map(([category, links]) => (
+              <div key={category}>
+                <h4 className="mb-4 font-semibold text-foreground capitalize">{category}</h4>
+                <ul className="space-y-3">
+                  {links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold text-foreground">Properties</h4>
-            <ul className="space-y-3">
-              {footerLinks.properties.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold text-foreground">Resources</h4>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="mb-4 font-semibold text-foreground">Legal</h4>
-            <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          </div>
-
-          
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
           transition={{ duration: 0.6, delay: 0.6 }}
           className="border-t border-border pt-8"
         >

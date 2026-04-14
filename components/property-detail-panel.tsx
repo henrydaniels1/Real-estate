@@ -5,14 +5,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  BedDouble,
-  Bath,
-  ChefHat,
-  Maximize,
-  Car,
-  X,
-} from "lucide-react"
+import { BedDouble, Bath, ChefHat, Maximize, Car, X } from "lucide-react"
+import { formatPrice } from "@/lib/utils"
 
 interface Property {
   id: string
@@ -41,15 +35,6 @@ export function PropertyDetailPanel({
   const [activeTab, setActiveTab] = useState("overview")
 
   if (!property) return null
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price)
-  }
 
   const amenities = [
     { icon: BedDouble, label: "Rooms", value: property.bedrooms },

@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { Home, Shield, TrendingUp, Users } from "lucide-react"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 const features = [
   {
@@ -32,44 +32,20 @@ const features = [
 ]
 
 export function FeaturesSection() {
-  const [isVisible, setIsVisible] = useState(false)
-  const sectionRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const currentSectionRef = sectionRef.current;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2,
-      }
-    );
-
-    if (currentSectionRef) {
-      observer.observe(currentSectionRef);
-    }
-
-    return () => {
-      if (currentSectionRef) {
-        observer.unobserve(currentSectionRef);
-      }
-    };
-  }, []);
+  const { ref, isInView } = useScrollAnimation()
 
   return (
-    <section ref={sectionRef} className="bg-background py-20 md:py-28">
+    <section ref={ref} className="bg-background py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 md:px-8 lg:px-12">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
           transition={{ duration: 0.8 }}
           className="mb-16 text-center"
         >
           <motion.span 
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mb-4 inline-block text-sm font-medium uppercase tracking-wider text-primary"
           >
@@ -77,7 +53,7 @@ export function FeaturesSection() {
           </motion.span>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-4 text-3xl font-semibold text-foreground md:text-4xl text-balance"
           >
@@ -85,7 +61,7 @@ export function FeaturesSection() {
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+            animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mx-auto max-w-2xl text-muted-foreground"
           >
@@ -95,7 +71,7 @@ export function FeaturesSection() {
 
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: isVisible ? 1 : 0 }}
+          animate={{ opacity: isInView ? 1 : 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           className="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
         >
@@ -103,7 +79,7 @@ export function FeaturesSection() {
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+              animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
               transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
               whileHover={{ y: -5 }}
               className="group rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-lg"

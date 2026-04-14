@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Search } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 
 const propertyTypes = ["House", "Apartment", "Residential"]
 const filterOptions = ["City", "House", "Residential", "Apartment"]
@@ -31,14 +32,13 @@ export function HeroSection() {
   const [location, setLocation] = useState("")
   const [rooms, setRooms] = useState("")
   const [activeFilters, setActiveFilters] = useState<string[]>([])
-  const [isVisible, setIsVisible] = useState(false)
   const [heroContent, setHeroContent] = useState<HeroContent>({
     title: "Build Your Future, One Property at a Time.",
     subtitle: "Discover exceptional properties that match your lifestyle. From luxury homes to investment opportunities, find your perfect space.",
     background_image: "/images/hero.jpg"
   })
-  const sectionRef = useRef<HTMLElement>(null)
-  const supabase = createClient()
+  const { ref, isInView } = useScrollAnimation()
+  const supabase = useRef(createClient()).current
 
   useEffect(() => {
     const fetchHeroContent = async () => {
@@ -57,29 +57,6 @@ export function HeroSection() {
     }
 
     fetchHeroContent()
-  }, [supabase])
-
-  useEffect(() => {
-    const currentSectionRef = sectionRef.current;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        threshold: 0.2, // Trigger when 20% of the section is visible
-      }
-    );
-
-    if (currentSectionRef) {
-      observer.observe(currentSectionRef);
-    }
-
-    return () => {
-      if (currentSectionRef) {
-        observer.unobserve(currentSectionRef);
-      }
-    };
   }, [])
 
   const toggleFilter = (filter: string) => {
@@ -101,7 +78,7 @@ export function HeroSection() {
   }
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen overflow-hidden">
+    <section ref={ref} className="relative min-h-screen overflow-hidden">
       {/* Background Image */}
       <motion.div
         initial={{ scale: 1.1 }}
@@ -120,7 +97,7 @@ export function HeroSection() {
         {/* Property Type Tags */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-6 flex flex-wrap gap-2"
         >
@@ -140,7 +117,7 @@ export function HeroSection() {
         {/* Main Heading */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 30 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           className="mb-8 max-w-2xl"
         >
@@ -149,7 +126,7 @@ export function HeroSection() {
           </h1>
           <motion.p 
             initial={{ opacity: 0 }}
-            animate={{ opacity: isVisible ? 1 : 0 }}
+            animate={{ opacity: isInView ? 1 : 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
             className="max-w-md text-sm leading-relaxed text-white/90 md:text-base drop-shadow-md"
           >
@@ -160,7 +137,7 @@ export function HeroSection() {
         {/* Search Card */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 40 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 40 }}
           transition={{ duration: 0.8, delay: 0.6 }}
           whileHover={{ y: -2 }}
           className="w-full max-w-4xl rounded-2xl bg-white/95 backdrop-blur-md p-6 shadow-2xl md:p-8 border border-white/20"

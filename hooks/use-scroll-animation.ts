@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react"
 import { useInView, useAnimation } from "framer-motion"
 
-export function useScrollAnimation(threshold = 0.1) {
+export function useScrollAnimation(threshold = 0.2) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: threshold })
+  const isInView = useInView(ref, { once: false, amount: threshold })
   const controls = useAnimation()
 
   useEffect(() => {
@@ -14,5 +14,5 @@ export function useScrollAnimation(threshold = 0.1) {
     }
   }, [isInView, controls])
 
-  return { ref, controls }
+  return { ref, isInView, controls }
 }

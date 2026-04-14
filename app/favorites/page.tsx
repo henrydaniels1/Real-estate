@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ListingsHeader } from "@/components/listings-header"
 import { Footer } from "@/components/footer"
-import { FavoritesPageClient } from "./favorites-page-client"
+import { FavoritesClient } from "./favorites-client"
 
 export default async function FavoritesPage() {
   const supabase = await createClient()
@@ -56,10 +56,27 @@ export default async function FavoritesPage() {
       .filter(Boolean) || []
 
   return (
-    <FavoritesPageClient
-      userData={userData}
-      favoriteProperties={favoriteProperties as any[]}
-      userId={user.id}
-    />
+    <div className="min-h-screen bg-background">
+      <ListingsHeader user={userData} activeTab="favorites" />
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <h1 className="mb-2 text-2xl font-bold text-foreground">Your Favorites</h1>
+        <p className="mb-8 text-muted-foreground">Properties you have saved for later</p>
+
+        {favoriteProperties.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="mb-2 text-lg font-medium text-foreground">No favorites yet</p>
+            <p className="text-sm text-muted-foreground">
+              Start browsing properties and save your favorites here.
+            </p>
+          </div>
+        ) : (
+          <FavoritesClient
+            initialProperties={favoriteProperties as any[]}
+            userId={user.id}
+          />
+        )}
+      </div>
+      <Footer />
+    </div>
   )
 }
